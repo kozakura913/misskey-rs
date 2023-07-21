@@ -32,6 +32,10 @@ pub struct Request {
     /// [ 1 .. ] characters
     #[builder(setter(into))]
     pub image_url: String,
+    #[cfg(feature = "13-14-0")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "13-14-0")))]
+    #[builder(default)]
+    pub day_of_week: u8,
 }
 
 impl misskey_core::Request for Request {
@@ -65,6 +69,8 @@ mod tests {
                 #[cfg(feature = "13-7-0")]
                 starts_at: chrono::Utc::now(),
                 expires_at: chrono::Utc::now() + chrono::Duration::hours(1),
+                #[cfg(feature = "13-14-0")]
+                day_of_week: 0b0100_0001,
             })
             .await;
     }

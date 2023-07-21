@@ -1,3 +1,6 @@
+#[cfg(feature = "13-14-0")]
+use std::collections::HashSet;
+
 use crate::Error;
 
 #[cfg(feature = "12-80-0")]
@@ -981,6 +984,8 @@ impl<C> AdBuilder<C> {
             starts_at: DateTime::default(),
             expires_at: DateTime::default(),
             image_url: String::default(),
+            #[cfg(feature = "13-14-0")]
+            day_of_week: 0,
         };
         AdBuilder { client, request }
     }
@@ -1073,6 +1078,24 @@ impl<C> AdBuilder<C> {
         self.request.image_url = image_url.into();
         self
     }
+
+    #[cfg(feature = "13-14-0")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "13-14-0")))]
+    /// Sets the days of week to display the ad.
+    pub fn days_of_week(&mut self, weekdays: HashSet<chrono::Weekday>) -> &mut Self {
+        self.request.day_of_week = weekdays.iter().fold(0u8, |acc, weekday| {
+            acc + match weekday {
+                chrono::Weekday::Sun => 0b0000_0001,
+                chrono::Weekday::Mon => 0b0000_0010,
+                chrono::Weekday::Tue => 0b0000_0100,
+                chrono::Weekday::Wed => 0b0000_1000,
+                chrono::Weekday::Thu => 0b0001_0000,
+                chrono::Weekday::Fri => 0b0010_0000,
+                chrono::Weekday::Sat => 0b0100_0000,
+            }
+        });
+        self
+    }
 }
 
 #[cfg(feature = "12-80-0")]
@@ -1114,6 +1137,8 @@ impl<C> AdUpdateBuilder<C> {
             url,
             image_url,
             memo,
+            #[cfg(feature = "13-14-0")]
+            day_of_week,
             ..
         } = ad;
         let request = endpoint::admin::ad::update::Request {
@@ -1128,6 +1153,8 @@ impl<C> AdUpdateBuilder<C> {
             starts_at,
             expires_at,
             image_url,
+            #[cfg(feature = "13-14-0")]
+            day_of_week,
         };
         AdUpdateBuilder { client, request }
     }
@@ -1217,6 +1244,24 @@ impl<C> AdUpdateBuilder<C> {
     /// Sets the image url of the ad.
     pub fn image_url(&mut self, image_url: impl Into<String>) -> &mut Self {
         self.request.image_url = image_url.into();
+        self
+    }
+
+    #[cfg(feature = "13-14-0")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "13-14-0")))]
+    /// Sets the days of week to display the ad.
+    pub fn days_of_week(&mut self, weekdays: HashSet<chrono::Weekday>) -> &mut Self {
+        self.request.day_of_week = weekdays.iter().fold(0u8, |acc, weekday| {
+            acc + match weekday {
+                chrono::Weekday::Sun => 0b0000_0001,
+                chrono::Weekday::Mon => 0b0000_0010,
+                chrono::Weekday::Tue => 0b0000_0100,
+                chrono::Weekday::Wed => 0b0000_1000,
+                chrono::Weekday::Thu => 0b0001_0000,
+                chrono::Weekday::Fri => 0b0010_0000,
+                chrono::Weekday::Sat => 0b0100_0000,
+            }
+        });
         self
     }
 }

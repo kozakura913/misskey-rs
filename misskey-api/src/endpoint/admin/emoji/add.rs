@@ -4,7 +4,9 @@ use crate::model::drive::DriveFile;
 use crate::model::role::Role;
 use crate::model::{emoji::Emoji, id::Id};
 
-use serde::{Deserialize, Serialize};
+#[cfg(not(feature = "13-14-0"))]
+use serde::Deserialize;
+use serde::Serialize;
 use typed_builder::TypedBuilder;
 #[cfg(any(docsrs, not(feature = "12-9-0")))]
 use url::Url;
@@ -55,6 +57,8 @@ pub struct Request {
     pub role_ids_that_can_be_used_this_emoji_as_reaction: Option<Vec<Id<Role>>>,
 }
 
+#[cfg(not(feature = "13-14-0"))]
+#[cfg_attr(docsrs, doc(cfg(not(feature = "13-14-0"))))]
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Response {
@@ -62,7 +66,10 @@ pub struct Response {
 }
 
 impl misskey_core::Request for Request {
+    #[cfg(not(feature = "13-14-0"))]
     type Response = Response;
+    #[cfg(feature = "13-14-0")]
+    type Response = Emoji;
     const ENDPOINT: &'static str = "admin/emoji/add";
 }
 

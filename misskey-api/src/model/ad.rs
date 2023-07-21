@@ -23,6 +23,9 @@ pub struct Ad {
     pub url: String,
     pub image_url: String,
     pub memo: String,
+    #[cfg(feature = "13-14-0")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "13-14-0")))]
+    pub day_of_week: u8,
 }
 
 impl_entity!(Ad);

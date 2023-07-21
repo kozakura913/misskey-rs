@@ -36,6 +36,10 @@ pub struct Request {
     #[serde(with = "ts_milliseconds")]
     #[builder(setter(into))]
     pub expires_at: DateTime<Utc>,
+    #[cfg(feature = "13-14-0")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "13-14-0")))]
+    #[builder(default)]
+    pub day_of_week: u8,
 }
 
 impl misskey_core::Request for Request {
@@ -86,6 +90,8 @@ mod tests {
                 #[cfg(feature = "13-7-0")]
                 starts_at: chrono::Utc::now(),
                 expires_at: chrono::Utc::now() + chrono::Duration::hours(2),
+                #[cfg(feature = "13-14-0")]
+                day_of_week: 0b0011_1110,
             })
             .await;
     }
