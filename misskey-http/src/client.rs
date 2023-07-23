@@ -236,7 +236,7 @@ impl UploadFileClient for HttpClient {
 			let response=self
 				.client
 				.post(url)
-				.header(reqwest::header::CONTENT_TYPE,"application/json")
+				.header(reqwest::header::CONTENT_TYPE,content_type)
 				.body(body)
 				.send().await?;
 
