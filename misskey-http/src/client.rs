@@ -5,6 +5,7 @@ use crate::error::{Error, Result};
 use common_multipart_rfc7578::client::multipart;
 use futures_util::future::BoxFuture;
 use futures_util::io::AsyncReadExt;
+#[cfg(feature="isahc-client")]
 use isahc::http;
 #[cfg(feature = "inspect-contents")]
 use log::debug;
@@ -26,6 +27,9 @@ use builder::HttpClientBuilder;
 pub struct HttpClient {
     url: Url,
     token: Option<String>,
+	#[cfg(feature="reqwest-client")]
+    client: reqwest::Client,
+	#[cfg(feature="isahc-client")]
     client: isahc::HttpClient,
 }
 
@@ -43,6 +47,9 @@ impl HttpClient {
         Ok(HttpClient {
             url,
             token: None,
+			#[cfg(feature="reqwest-client")]
+            client: reqwest::ClientBuilder::new().build()?,
+			#[cfg(feature="isahc-client")]
             client: isahc::HttpClient::new()?,
         })
     }
@@ -52,6 +59,9 @@ impl HttpClient {
         Ok(HttpClient {
             url,
             token: Some(token.into()),
+			#[cfg(feature="reqwest-client")]
+            client: reqwest::ClientBuilder::new().build()?,
+			#[cfg(feature="isahc-client")]
             client: isahc::HttpClient::new()?,
         })
     }
@@ -132,8 +142,9 @@ impl Client for HttpClient {
                 url,
                 String::from_utf8_lossy(&body)
             );
-
+			#[cfg(feature="isahc-client")]
             use isahc::http::header::CONTENT_TYPE;
+			#[cfg(feature="isahc-client")]
             let response = self
                 .client
                 .send_async(
@@ -144,7 +155,13 @@ impl Client for HttpClient {
                         .unwrap(),
                 )
                 .await?;
-
+			#[cfg(feature="reqwest-client")]
+			let response=self
+				.client
+				.post(url)
+				.header(reqwest::header::CONTENT_TYPE,"application/json")
+				.body(body)
+				.send().await?;
             response_to_result::<R>(response).await
         })
     }
@@ -192,12 +209,19 @@ impl UploadFileClient for HttpClient {
 
             let content_type = form.content_type();
 
+			#[cfg(feature="isahc-client")]
             use futures_util::stream::TryStreamExt;
+			#[cfg(feature="isahc-client")]
             let stream = multipart::Body::from(form).map_err(Into::into);
+			#[cfg(feature="isahc-client")]
             let body =
                 isahc::AsyncBody::from_reader(async_dup::Mutex::new(stream.into_async_read()));
 
+			#[cfg(feature="reqwest-client")]
+			let body=reqwest::Body::wrap_stream(multipart::Body::from(form));
+			#[cfg(feature="isahc-client")]
             use isahc::http::header::CONTENT_TYPE;
+			#[cfg(feature="isahc-client")]
             let response = self
                 .client
                 .send_async(
@@ -208,12 +232,41 @@ impl UploadFileClient for HttpClient {
                         .unwrap(),
                 )
                 .await?;
+			#[cfg(feature="reqwest-client")]
+			let response=self
+				.client
+				.post(url)
+				.header(reqwest::header::CONTENT_TYPE,"application/json")
+				.body(body)
+				.send().await?;
 
             response_to_result::<R>(response).await
         })
     }
 }
 
+#[cfg(feature="reqwest-client")]
+async fn response_to_result<R: Request>(
+    response: reqwest::Response,
+) -> Result<ApiResult<R::Response>> {
+    let status = response.status();
+	let bytes=response.bytes().await?;
+    let json_bytes = if bytes.is_empty() {
+        b"null".as_ref()
+    } else {
+        bytes.as_ref()
+    };
+
+    if status.is_success() {
+        // Limit response to `ApiResult::Ok` branch to get informative error message
+        // when our model does not match the response.
+        Ok(ApiResult::Ok(serde_json::from_slice(json_bytes)?))
+    } else {
+        Ok(serde_json::from_slice(json_bytes)?)
+    }
+}
+
+#[cfg(feature="isahc-client")]
 async fn response_to_result<R: Request>(
     response: http::Response<isahc::AsyncBody>,
 ) -> Result<ApiResult<R::Response>> {

@@ -14,16 +14,19 @@ categories = ["web-programming::http-client"]
 
 [features]
 inspect-contents = ["log"]
+reqwest-client=["reqwest"]
+isahc-client=["isahc","openssl-sys"]
 
 [dependencies]
+reqwest = { version = "0.11", features = ["stream"], optional = true}
 misskey-core = { path = "../misskey-core", version = "0.2.0" }
 serde = "1.0"
 serde_json = "1.0"
 thiserror = "1.0.2"
 url = "2.2.2"
-isahc = "1.0"
+isahc = { version = "1.0", optional = true}
 # openssl-sys <= 0.9.44 may fails to build because of rustc_version
-openssl-sys = "0.9.45"
+openssl-sys = { version = "0.9.45", optional = true}
 mime = "0.3"
 common-multipart-rfc7578 = "0.6.0"
 async-dup = "1.0"

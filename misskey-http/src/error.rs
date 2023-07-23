@@ -5,7 +5,12 @@ use thiserror::Error;
 /// Possible errors from HTTP client.
 #[derive(Debug, Error)]
 pub enum Error {
+    /// Errors from underlying [reqwest](https://docs.rs/reqwest) library.
+	#[cfg(feature="reqwest-client")]
+    #[error("network error: {0}")]
+    Network(#[from] reqwest::Error),
     /// Errors from underlying [isahc](https://docs.rs/isahc) library.
+	#[cfg(feature="isahc-client")]
     #[error("network error: {0}")]
     Network(#[from] isahc::Error),
     /// IO error.

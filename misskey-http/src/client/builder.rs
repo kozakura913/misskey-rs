@@ -4,10 +4,14 @@ use std::result::Result as StdResult;
 use crate::client::HttpClient;
 use crate::error::{Error, Result};
 
-use isahc::http::{
-    self,
-    header::{HeaderMap, HeaderName, HeaderValue},
-};
+#[cfg(feature="isahc-client")]
+use isahc::http::header::{HeaderMap, HeaderName, HeaderValue};
+#[cfg(feature="isahc-client")]
+use isahc::http::Error as HttpError;
+#[cfg(feature="reqwest-client")]
+use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
+#[cfg(feature="reqwest-client")]
+use reqwest::Error as HttpError;
 use url::Url;
 
 #[derive(Debug)]
@@ -86,8 +90,8 @@ impl HttpClientBuilder {
     where
         K: TryInto<HeaderName>,
         V: TryInto<HeaderValue>,
-        K::Error: Into<http::Error>,
-        V::Error: Into<http::Error>,
+        K::Error: Into<HttpError>,
+        V::Error: Into<HttpError>,
     {
         self.inner.and_then_mut(|inner| {
             let result = key.try_into().err_into().and_then(|key| {
@@ -123,6 +127,9 @@ impl HttpClientBuilder {
             Ok(HttpClient {
                 url: inner.url,
                 token: inner.token,
+				#[cfg(feature="reqwest-client")]
+				client:reqwest::ClientBuilder::new().default_headers(inner.additional_headers).build()?,
+				#[cfg(feature="isahc-client")]
                 client: isahc::HttpClientBuilder::new()
                     .default_headers(&inner.additional_headers)
                     .build()?,
