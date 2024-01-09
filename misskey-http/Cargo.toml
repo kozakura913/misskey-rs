@@ -18,7 +18,7 @@ reqwest-client=["reqwest"]
 isahc-client=["isahc","openssl-sys"]
 
 [dependencies]
-reqwest = { version = "0.11", features = ["stream"], optional = true}
+reqwest = { version = "0.11",default-features = false, features = ["gzip", "rustls-tls-native-roots", "stream"], optional = true}
 misskey-core = { path = "../misskey-core", version = "0.2.0" }
 serde = "1.0"
 serde_json = "1.0"
