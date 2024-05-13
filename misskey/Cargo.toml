@@ -103,6 +103,8 @@ objectid = ["misskey-api/objectid", "misskey-util/objectid"]
 
 http-client = ["misskey-http/reqwest-client"]
 reqwest-client = ["misskey-http/reqwest-client"]
+reqwest-webpki = ["misskey-http/reqwest-webpki"]
+reqwest-native = ["misskey-http/reqwest-native"]
 isahc-client = ["misskey-http/isahc-client"]
 websocket-client = ["misskey-websocket"]
 
